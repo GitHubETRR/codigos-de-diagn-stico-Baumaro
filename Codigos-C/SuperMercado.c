@@ -104,19 +104,21 @@ Usuario_t Iniciar_sesion()
 
     while (fgets(Linea, MAX_LINEA, fp))
     {
+        Usuario_t *UA = (Usuario_t *)malloc(sizeof(Usuario_t));
+        *UA->Nombre_Usuario = strtok(Linea, ",");
+        *UA->Contraseña = strtok(NULL, ",");
+        UA->Rango = strtok(NULL, ",");
 
-        char *NU = strtok(Linea, ",");
-        char *CS = strtok(NULL, ",");
-        char *RG = strtok(NULL, ",");
-
-        if (strcmp(NU, Usuario_inicio.Nombre_Usuario) == 0)
+        if (strcmp(UA->Nombre_Usuario, Usuario_inicio.Nombre_Usuario) == 0)
         {
 
-            if (strcmp(CS, Usuario_inicio.Contraseña) == 0)
+            if (strcmp(UA->Contraseña, Usuario_inicio.Contraseña) == 0)
             {
 
-                Usuario_inicio.Rango = *RG;
+                Usuario_inicio.Rango = UA->Rango;
                 printf("se ha iniciado sesion con exito");
+
+                return Usuario_inicio;
             }
             else
             {
