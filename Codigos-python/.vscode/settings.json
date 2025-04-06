@@ -1,2 +1,13 @@
+"workbench.colorCustomizations": {
+  "editor.foreground": "#FFFFFF",  
+  "editorCursor.foreground": "#00FFFF",  
+  "editor.selectionBackground": "#00FF00AA",  
+  "editor.selectionHighlightBackground": "#FF00FFAA",  
+  "editor.lineHighlightBackground": "#222222",  
+  "editorBracketMatch.background": "#FF00FF77",  
+  "editorBracketMatch.border": "#00FFFF",  
+  "editorIndentGuide.activeBackground": "#00FF00",  
+  "editorRuler.foreground": "#FF0000"
+}
 {
 }
