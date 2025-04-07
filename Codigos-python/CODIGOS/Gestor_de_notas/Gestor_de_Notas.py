@@ -1,6 +1,7 @@
 import sys 
+import os
 
-sys.path.append("C:\\Users\\bauti\\OneDrive\\Documentos\\GitHub\\codigo-prueba-Baumaro\\Lenguajes-electronicos\\Codigos-python")
+sys.path.append(os.path.abspath("Codigos-python"))
 
 from MODULOS_BAUMARO.Usos_Comunes import bienvenida,apagar_
 
@@ -14,7 +15,7 @@ def main():
     apagar = False
     
 
-    with open("C:\\Users\\bauti\\OneDrive\\Documentos\\GitHub\\codigo-prueba-Baumaro\\Lenguajes-electronicos\\Codigos-python\\CODIGOS\\Gestor_de_notas\\Notas.txt","r", encoding = "UTF-8") as Notas:
+    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "Notas.txt"),"r", encoding = "UTF-8") as Notas:
 
         Lista_Notas = Notas.readlines()
 
