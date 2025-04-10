@@ -49,7 +49,7 @@ typedef struct
 
 void Imprimir_objetos(void);
 
-void Imprimir_Usuarios(void);
+void Imprimir_Usuario(void);
 
 int Contar_Lineas_Csv(FILE *fp);
 
@@ -78,17 +78,17 @@ int main()
 
         printf("\ndesea ingresar al sistema de administracion?\n");
 
-        char *VE = (char *)malloc(3 * sizeof(int));
+        char *VE = (char *)malloc(3 * sizeof(char));
 
         if (VE == NULL)
         {
-            printf("\nError al reservar memoria\n");    
+            printf("\nError al reservar memoria\n");
             exit(VALOR_ERROR);
         }
-    
+
         scanf("%3s", VE);
 
-        if ((strcmp(VE, "si")== 0)||(strcmp(VE, "SI")== 0))
+        if ((strcmp(VE, "si") == 0) || (strcmp(VE, "SI") == 0))
         {
             free(VE);
 
@@ -96,12 +96,15 @@ int main()
             printf("(0) - SKIP\n");
             printf("(1) - CREAR USUARIO\n");
             printf("(2) - AGREGAR PRODUCTO\n");
-            printf("(3) - AGREGAR STOCK");
-            printf("(4) - Imprimir Objetos");
+            printf("(3) - AGREGAR STOCK\n");
+            printf("(4) - Imprimir Objetos\n");
 
             int *VE = (int *)malloc(sizeof(int));
 
-            switch (*VE){
+            scanf("%d", VE);
+
+            switch (*VE)
+            {
             case 1:
                 Crear_Usuario();
                 break;
@@ -117,37 +120,24 @@ int main()
             default:
                 break;
             }
-
-        }else{
+        }
+        else
+        {
             free(VE);
         }
-    
     }
-    printf("\ndesea ingresar un producto\n");
-
-    char *VE = (char*)malloc(3 * sizeof(int));
-
-    if (VE == NULL)
-    {
-        printf("\nError al reservar memoria\n");    
-        exit(VALOR_ERROR);
-    }
-    
-    scanf("%3s", VE);
-    
-
-    if ((strcmp(VE, "si")== 0)||(strcmp(VE, "SI")== 0))
-    {
-        Agregar_Producto();
-    }
-
-    free(VE);
 }
 
-void Crear_Usuarios()
+void Crear_Usuario(void)
 {
 
     Usuario_t *Nuevo_Usuario = (Usuario_t *)malloc(sizeof(Usuario_t));
+
+    if (Nuevo_Usuario == NULL)
+    {
+        printf("no se ha podido reservar la memoria");
+        exit(VALOR_ERROR);
+    }
 
     printf("\nIngrese el nombre de usuario de la cuenta: ");
     scanf("%s", Nuevo_Usuario->Nombre_Usuario);
@@ -165,9 +155,8 @@ void Crear_Usuarios()
         printf("no se puede abrir el archivo\n");
         exit(VALOR_ERROR);
     }
-    
 
-    fprintf(fp, "%s,%s,%d\n", Nuevo_Usuario->Nombre_Usuario, Nuevo_Usuario->Contraseña, Nuevo_Usuario->Rango);
+    fprintf(fp, "\n%s,%s,%d", Nuevo_Usuario->Nombre_Usuario, Nuevo_Usuario->Contraseña, Nuevo_Usuario->Rango);
 
     fclose(fp);
     free(Nuevo_Usuario);
@@ -275,15 +264,13 @@ void Agregar_Producto(void)
 
     for (int i = 0; i < 8; i++)
     {
-        if(scanf("%i", caracteristicas_ + i) != 1 ){
+        if (scanf("%i", caracteristicas_ + i) != 1)
+        {
 
             printf("\n Error al leer el dato");
             exit(VALOR_ERROR);
-
         }
     }
-    
-
 
     Nuevo_Producto.info.flag.disponible = *caracteristicas_;
     Nuevo_Producto.info.flag.oferta = *(caracteristicas_ + 1);
@@ -329,8 +316,8 @@ int Contar_Lineas_Csv(FILE *fp)
     return cant_obj;
 }
 
-void Agregar_Stock(){
-
+void Agregar_Stock()
+{
     FILE *fp = fopen("Base_objetos.csv", "r");
 
     FILE *fp_aux = fopen("Archivo_temporal_obj.csv", "w");
@@ -343,8 +330,7 @@ void Agregar_Stock(){
         exit(VALOR_ERROR);
     }
 
-    Producto_t *PI = (Producto_t*)malloc(sizeof(Producto_t));
-
+    Producto_t *PI = (Producto_t *)malloc(sizeof(Producto_t));
 
     printf("\ningrese el nombre del objeto que quiero cambiar el stock\n");
 
@@ -352,49 +338,47 @@ void Agregar_Stock(){
 
     printf("\ningrese la cantidad que quiere aniadir\n");
 
-    scanf("%i", PI->cantidad);
+    scanf("%i", &PI->cantidad);
 
-
-    Producto_t *LP = (Producto_t*)malloc(sizeof(Producto_t));
+    Producto_t *LP = (Producto_t *)malloc(sizeof(Producto_t));
 
     if (LP == NULL)
     {
         printf("\n Error memoria insuficiente");
         exit(VALOR_ERROR);
     }
-    
-    int *info_int = (int*)malloc(sizeof(int));
+
+    int *info_int = (int *)malloc(sizeof(int));
 
     if (info_int == NULL)
     {
         printf("\n Error memoria insuficiente");
         exit(VALOR_ERROR);
     }
-    
 
     while (fgets(Linea, MAX_LINEA, fp))
     {
 
         strcpy(LP->Nombre, strtok(Linea, ","));
-        
-        
-        if((strcmp(LP->Nombre, PI->Nombre) == 0)){
+
+        if ((strcmp(LP->Nombre, PI->Nombre) == 0))
+        {
 
             LP->Precio = atof(strtok(NULL, ","));
             LP->cantidad = atoi(strtok(NULL, ",")) + PI->cantidad;
             *info_int = atoi(strtok(NULL, ","));
             LP->Codigo = atoi(strtok(NULL, ","));
 
-            fprintf(fp_aux, "%s,%f,%i,%i,%i", LP->Nombre, LP->Precio, LP->cantidad, info_int, LP->Codigo);
-
-        }else{
-            fprintf(fp_aux, "%s", Linea);
+            fprintf(fp_aux, "\n%s,%f,%i,%i,%i", LP->Nombre, LP->Precio, LP->cantidad, *info_int, LP->Codigo);
+        }
+        else
+        {
+            fprintf(fp_aux, "\n%s", Linea);
         }
     }
 
     fclose(fp);
     fclose(fp_aux);
-
 
     free(LP);
     free(info_int);
@@ -415,20 +399,18 @@ void Agregar_Stock(){
         exit(VALOR_ERROR);
     }
 
-    
-    while (fgets(Linea, MAX_LINEA, fp_aux ))
+    while (fgets(Linea, MAX_LINEA, fp_aux))
     {
         fprintf(fp, "%s", Linea);
     }
-    
+
     fclose(fp);
     fclose(fp_aux);
-
 }
 
-void Imprimir_objetos(void){
-
-    FILE *fp = fopen("Base_objetos", "r");
+void Imprimir_objetos(void)
+{
+    FILE *fp = fopen("Base_objetos.csv", "r");
 
     if (fp == NULL)
     {
@@ -436,7 +418,7 @@ void Imprimir_objetos(void){
         exit(VALOR_ERROR);
     }
 
-    Producto_t *PA = (Producto_t*)malloc(sizeof(Producto_t));
+    Producto_t *PA = (Producto_t *)malloc(sizeof(Producto_t));
 
     if (PA == NULL)
     {
@@ -444,7 +426,7 @@ void Imprimir_objetos(void){
         exit(VALOR_ERROR);
     }
 
-    char *linea = (char*)malloc(MAX_LINEA * sizeof(char)); 
+    char *linea = (char *)malloc(MAX_LINEA * sizeof(char));
 
     if (linea == NULL)
     {
@@ -464,19 +446,21 @@ void Imprimir_objetos(void){
 
     int i = 0;
     while (fgets(linea, MAX_LINEA, fp))
-    {   
+    {
         if (i == 0)
         {
             printf("\n%s\n", linea);
-        }else{
-        
+        }
+        else
+        {
+
             strcpy(PA->Nombre, strtok(linea, ","));
             PA->Precio = atof(strtok(NULL, ","));
             PA->cantidad = atoi(strtok(NULL, ","));
             PA->info.estado = atoi(strtok(NULL, ","));
-            PA->Codigo =atoi(strtok(NULL, ","));
+            PA->Codigo = atoi(strtok(NULL, ","));
 
-            printf("\n%s| %2f| %d| %i %i %i %i %i %i %i %i| %i \n", PA->Nombre, PA->Precio, PA->cantidad, PA->info.flag.disponible, PA->info.flag.oferta, PA->info.flag.agotado, PA->info.flag.reservado, PA->info.flag.perecedero, PA->info.flag.fragil, PA->info.flag.importado, PA->info.flag.exclusivo);
+            printf("\n%s| %2f| %d| %i %i %i %i %i %i %i %i| %i \n", PA->Nombre, PA->Precio, PA->cantidad, PA->info.flag.disponible, PA->info.flag.oferta, PA->info.flag.agotado, PA->info.flag.reservado, PA->info.flag.perecedero, PA->info.flag.fragil, PA->info.flag.importado, PA->info.flag.exclusivo, PA->Codigo);
         }
         i++;
     }
