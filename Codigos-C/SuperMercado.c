@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #define MAX_LINEA 151
 #define MAX_CHAR 50
@@ -48,6 +49,15 @@ typedef struct
 
 } producto_t;
 
+
+typedef struct lineas_t {
+
+    char linea[MAX_LINEA];
+    struct lineas_t *next;
+
+}lineas_t;
+
+
 // funciones de uso principal 
 
 void imprimir_objetos(void);
@@ -74,7 +84,7 @@ void menu_info_obj(void);
 
 char* crear_linea(void);
 
-int contar_lineas_csv(FILE *fp);
+int* contar_lineas_csv(FILE *fp);
 
 producto_t ingresar_info(producto_t);
 
@@ -84,9 +94,13 @@ int* VE_int(void);
 
 char* VE_char(void);
 
+lineas_t* crear_lineas_enlazadas();
+
 int comprar(void);
 
 producto_t* crear_malloc_producto(void);
+
+void liberar_lista_enlazada(lineas_t *lista);
 
 
 
@@ -100,61 +114,74 @@ int main(){
 
         usuario_iniciado = iniciar_sesion();
 
-    } while (strcmp(usuario_iniciado.nombre_usuario, "error") == 0);
+    }while (strcmp(usuario_iniciado.nombre_usuario, "error") == 0);
 
-    if (usuario_iniciado.rango == 1)
-    {
+    int *apagar = VE_int();
 
-        printf("\ndesea ingresar al sistema de administracion?\n\n");
-
-        char *VE = VE_char();
-
-        scanf("%3s", VE);
-
-        if ((strcmp(VE, "si") == 0) || (strcmp(VE, "SI") == 0))
+    do{
+        if (usuario_iniciado.rango == 1)
         {
 
-            menu_admin();
+            printf("\ndesea ingresar al sistema de administracion?\n\n");
 
-            seleccion_menu_admin();
-            
-        }
+            char *VE = VE_char();
 
+            scanf("%3s", VE);
 
-        printf("\ndesea ingresar al sistema de usuario?\n\n");
-
-
-        scanf("%3s", VE);
-
-        if ((strcmp(VE,"si") == 0) || (strcmp(VE,"Si") == 0))
-        {
-
-            menu_usuario();
-
-            int *VE = VE_int();
-
-            scanf("%d", VE);
-
-            switch(*VE)
+            if ((strcmp(VE, "si") == 0) || (strcmp(VE, "SI") == 0))
             {
-            case 0:
-                int resultado = comprar();
-                
-                if (resultado == VALOR_ERROR)
-                {
-                    printf("\nel nombre del objeto que ingresaste puede no existir\n");
-                }
-                break;
-            case 1:
-                imprimir_objetos();
-                break;
-            default:
-                break;
+
+                menu_admin();
+
+                seleccion_menu_admin();
+
             }
+    
+
+
+            printf("\ndesea ingresar al sistema de usuario?\n\n");
+
+
+            scanf("%3s", VE);
+
+            if ((strcmp(VE,"si") == 0) || (strcmp(VE,"Si") == 0))
+            {
+
+                menu_usuario();
+
+                int *VE = VE_int();
+
+                scanf("%d", VE);
+
+                switch(*VE)
+                {
+                case 0:
+                    int resultado = comprar();
+                
+                    if (resultado == VALOR_ERROR)
+                    {
+                        printf("\nel nombre del objeto que ingresaste puede no existir\n");
+                    }
+                    break;
+                case 1:
+                    imprimir_objetos();
+                    break;
+                default:
+                    break;
+                }
+            }
+            free(VE);
         }
-        free(VE);
-    }
+
+        printf("\nsi desea seguir operando ingrese un 1\n");
+
+        scanf("%i", *apagar);
+
+    }while (*apagar == 1);
+
+    free(apagar);
 }
+
 
 
 void crear_usuario(void)
@@ -276,7 +303,11 @@ void agregar_producto(void) //anda
     }
     nuevo_producto = ingresar_info(nuevo_producto);
 
-    nuevo_producto.Codigo = contar_lineas_csv(fp);
+    int *cant_obj = contar_lineas_csv(fp);
+
+    nuevo_producto.Codigo = *cant_obj;
+
+    free(cant_obj);
 
     fclose(fp);
 
@@ -287,15 +318,18 @@ void agregar_producto(void) //anda
     fclose(fp);
 }
 
-int contar_lineas_csv(FILE *fp)
+int* contar_lineas_csv(FILE *fp)
 {
 
-    int cant_obj = 0;
+    int* cant_obj = (int*)malloc(sizeof(int));
+
+    *cant_obj = 0;
 
     char linea[MAX_LINEA];
+
     while (fgets(linea, MAX_LINEA, fp))
     {
-        cant_obj++;
+        (*cant_obj)++;
     }
 
     return cant_obj;
@@ -349,7 +383,7 @@ void agregar_Stock()
             *info_int = atoi(strtok(NULL, ","));
             LP->Codigo = atoi(strtok(NULL, ","));
 
-            fprintf(fp_aux, "%s,%f,%i,%i,%i", LP->nombre, LP->precio, LP->cantidad, *info_int, LP->Codigo);
+            fprintf(fp_aux, "%s,%f,%i,%i,%i\n", LP->nombre, LP->precio, LP->cantidad, *info_int, LP->Codigo);
         }
         else
         {
@@ -390,105 +424,97 @@ void agregar_Stock()
 
 int comprar(){
 
-
-    printf("\ningrese el nombre del producto que desea comprar: ");
-
-    producto_t *producto_ingreso = crear_malloc_producto();
-
-    scanf("%s", producto_ingreso->nombre);
-
-    printf("\ningrese la cantidad que quiere comprar\n");
-
-    scanf("%d", producto_ingreso->cantidad);
-
-    printf("%d", producto_ingreso->cantidad);
-
     FILE *fp = fopen("Base_objetos.csv", "r");
-    FILE *fp_aux = fopen ("Archivo_temporal_obj.csv", "w");
 
     if (fp == NULL)
     {
-        printf("ERROR, no se ha encontrado el archivo");
-        exit(VALOR_ERROR);
-    }
-
-    if (fp_aux == NULL)
-    {
-        printf("ERROR, no se ha encontrado el archivo");
+        printf("\nError, no se ha encontrado el archivo\n");
         exit(VALOR_ERROR);
     }
     
+
+    int *cant_obj = contar_lineas_csv(fp);
+
+    printf("\ncant: %i\n", *cant_obj);
+
+    fseek(fp, 0, SEEK_SET);
+
+    lineas_t *lineas_aux = crear_lineas_enlazadas();
+
+    lineas_t *lineas = crear_lineas_enlazadas();
+
+    lineas_t *lineas_inicio = lineas;
     
-    producto_t *producto_aux = crear_malloc_producto();
+    producto_t *producto_ingreso = crear_malloc_producto();
+    producto_t *producto_fp = crear_malloc_producto();
 
-    char *linea = crear_linea();
-    char *linea_aux = crear_linea();
+    printf("\ningrese el nombre del producto:");
+    scanf("%49s", producto_ingreso->nombre);
 
-    while (fgets(linea, MAX_LINEA, fp))
-    {
-        strcpy(linea_aux, linea);
-        strcpy(producto_aux->nombre, strtok(linea, ","));
+    printf("\ningrese la cantidad que quiere comprar: ");
+    scanf("%i", &producto_ingreso->cantidad);
 
-        if ((strcmp(producto_aux->nombre, producto_ingreso->nombre) == 0))
-        {
 
-            producto_aux->precio = atof(strtok(NULL,","));
-            producto_aux->cantidad = atoi(strtok(NULL,","));
-            producto_aux->info.estado = atoi(strtok(NULL,","));
-            producto_aux->Codigo = atoi(strtok(NULL,","));
+    while(fgets(lineas->linea, MAX_LINEA, fp)){
 
-            printf("COSTE A PAGAR = %d", producto_aux->precio * producto_ingreso->cantidad);
+        strcpy(lineas_aux->linea, lineas->linea);
+        strcpy(producto_fp->nombre, strtok(lineas_aux->linea, ","));
 
-            producto_aux->cantidad = producto_aux->cantidad - producto_ingreso->cantidad;
-            printf("\n\n%d\n\n", producto_aux->cantidad);
+        if((strcmp(producto_ingreso->nombre, producto_fp->nombre)== 0)){
 
-            if (producto_aux->cantidad < 0)
+            producto_fp->precio = atof(strtok(NULL, ","));
+            producto_fp->cantidad = atoi(strtok(NULL, ","));
+            producto_fp->info.estado = atoi(strtok(NULL, ","));
+            producto_fp->Codigo = atoi(strtok(NULL, ","));
+
+            if ((producto_fp->cantidad - producto_ingreso->cantidad) < 0)
             {
-                printf("\nno hay mas stock de ese producto\n");
-                return VALOR_ERROR;
+                printf("\n no hay stock suficiente\n");
+                return -1;
             }
 
-            fprintf(fp_aux, "%s,%f,%i,%i,%i\n", producto_aux->nombre, producto_aux->precio, producto_aux->cantidad, producto_aux->info.estado, producto_aux->Codigo);
+            producto_fp->cantidad = producto_fp->cantidad - producto_ingreso->cantidad;
 
-        }else{
-            fprintf(fp_aux, "%s\n", linea_aux);
+            sprintf(lineas->linea, "%s,%f,%i,%i,%i\n", producto_fp->nombre ,producto_fp->precio ,producto_fp->cantidad ,producto_fp->info.estado ,producto_fp->Codigo);
         }
+
+        lineas_t *linea_next = crear_lineas_enlazadas();
+        lineas->next = linea_next;
+        linea_next->next = NULL;
+        lineas = linea_next;
+
     }
 
-    free(producto_aux);
-    free(producto_ingreso);
-    free(linea_aux);
-    
-    fp = fopen("Base_objetos.csv", "w");
-    fp_aux = fopen ("Archivo_temporal_obj.csv", "r");
-
-    if (fp == NULL)
-    {
-        printf("ERROR, no se ha encontrado el archivo");
-        exit(VALOR_ERROR);
-    }
-
-    if (fp_aux == NULL)
-    {
-        printf("ERROR, no se ha encontrado el archivo");
-        exit(VALOR_ERROR);
-    }
-    while (fgets(linea,MAX_LINEA, fp_aux))
-    {
-        printf("%s", linea);
-
-        fprintf(fp, "%s", linea);
-    }
-
-    free(linea);
     fclose(fp);
-    fclose(fp_aux);
+
+    fp = fopen("Base_objetos.csv", "w");
+
+    lineas = lineas_inicio;
+
+    printf("\n%s\n", lineas_inicio->linea);
+
+    for (int i = 0; i < *cant_obj; i++)
+    {
+        fprintf(fp, "%s", lineas->linea);
+        
+        lineas = lineas->next;
+    }
     
+    fclose(fp);
+
+    free(cant_obj);
+
+    free(producto_fp);
+    free(producto_ingreso);
+    free(lineas_aux);
+
+    liberar_lista_enlazada(lineas);
+
     return 0;
 }
 
-void imprimir_objetos(void)
-{
+void imprimir_objetos(void){
+    
     FILE *fp = fopen("Base_objetos.csv", "r");
 
     if (fp == NULL)
@@ -546,6 +572,47 @@ char* crear_linea(void){
     }
 
     return linea;
+}
+
+lineas_t* crear_lineas_enlazadas(){
+
+    lineas_t *lista = (lineas_t*)malloc(sizeof(lineas_t));
+    
+    if (lista == NULL)
+    {
+        printf("Error, almacenamiento insuficiente");
+        exit(VALOR_ERROR);
+    }
+
+    return lista;
+}
+
+void liberar_lista_enlazada(lineas_t *lista){
+
+    bool *final_lista = (bool*)malloc(sizeof(bool));
+
+    if (final_lista == NULL)
+    {
+        printf("\nError, espacio insuficiente\n");
+        exit(VALOR_ERROR);
+    }
+
+    do
+    {
+
+        lineas_t *lista_aux = lista;
+        lista = lista->next;
+
+        free(lista_aux);
+
+
+        if (lista == NULL)
+        {
+            *final_lista = FALSE;
+        }
+        
+    } while (*final_lista);
+
 }
 
 producto_t ingresar_info(producto_t nuevo_producto){
