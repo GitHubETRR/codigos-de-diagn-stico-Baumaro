@@ -25,8 +25,6 @@ def crear_df():
         df.to_excel("C:\\Users\\botero\\Desktop\\codigo-prueba-Baumaro\\Lenguajes-electronicos\\Codigos-python\\CODIGOS\\Problemas_archivos\\problemas_graficos\\archivo-horas.xlsx", index = False , engine = "openpyxl")
 
 def ingresar_datos_diario():
-
-    
     
     df = pd.read_excel("C:\\Users\\bauti\OneDrive\\Documentos\GitHub\\codigo-prueba-Baumaro\\Lenguajes-electronicos\\Codigos-python\\CODIGOS\\Problemas_archivos\\problemas_graficos\\archivo-horas.xlsx", engine = "openpyxl")
 
@@ -42,7 +40,7 @@ def ingresar_datos_diario():
 
         df = pd.concat([df, Nueva_fila], ignore_index = True)
 
-    df["Fecha"] = pd.to_datetime(df["Fecha"])
+    df["Fecha"] = pd.to_datetime(df["Fecha"]) #  convierte datos en formato de fecha y hora a un tipo de dato datetime64[ns], que es el tipo de fecha estándar en Pandas.
     
     df.sort_values(by="Fecha", ascending = True)
 
