@@ -21,6 +21,22 @@ enum encoder
 #define DISPLAY_RS 12
 #define DISPLAY_ENABLE 11
 
+enum meses
+{
+    ENERO = 1,
+    FEBRERO,
+    MARZO,
+    ABRIL,
+    MAYO,
+    JUNIO,
+    JULIO,
+    AGOSTO,
+    SEPTIEMBRE,
+    OCTUBRE,
+    NOVIEMBRE,
+    DICIEMBRE
+}
+
 enum display
 {
     DISPLAY_D7 = 2,
@@ -60,7 +76,7 @@ void Actualizar_MaquinaEstado(int *);
 
 void parpadear_texto(char texto[], int tiempo, int tiempo_parpadeo);
 
-void tiempo();
+int tiempo(int tiempo[]);
 
 void setup()
 {
@@ -77,13 +93,13 @@ void setup()
     pinmode(ENCODER_OK, INPUT);
 
     lcd.begin(COLUMNAS, FILAS);
-    static int tiempo[6] = {0, 0, 0, 0, 0, 0};
-    static int DisplayCursor[2] = {0, 0};
-    static int cant_loops = 0;
 }
 
 void loop()
 {
+    static int tiempo[6] = {0, 0, 0, 0, 0, 0};
+    static int DisplayCursor[2] = {0, 0};
+    static int cant_loops = 0;
 
     lcd.setCursor(DisplayCursor[0], DisplayCursor[1]);
 
@@ -98,17 +114,40 @@ void loop()
             int tiempo_seteado = definir_hora(movimiento);
         }
     }
-
-    tiempo[SEGUNDOS] += 1 if (tiempo[SEGUNDOS] > 60)
-    {
-        tiempo[SEGUNDOS]-- tiempo[MINUTOS] += 1 if (tiempo[MINUTOS] > 60)
-        {
-        }
-    }
 }
 
-void tiempo()
+int[] tiempo(int tiempo[])
 {
+    tiempo[SEGUNDOS]++;
+    if (tiempo[SEGUNDOS] > 60)
+    {
+        tiempo[SEGUNDOS] = 0;
+        tiempo[MINUTOS]++;
+
+        if (tiempo[MINUTOS] > 60)
+        {
+
+            tiempo[MINUTOS] = 0;
+            tiempo[HORAS]++;
+
+            if (tiempo[HORAS] > 24)
+            {
+                tiempo[HORAS] = 0;
+                tiempo[DIAS]++;
+
+                if (((tiempo[MESES] == FEBRERO) && (tiempo[DIAS] > 28)) || (((tiempo[MESES] == JUNIO) || (tiempo[MESES] == SEPTIEMBRE) || (tiempo[MESES] == ABRIL) || (tiempo[MESES] == NOVIEMBRE)) && (tiempo[DIAS] > 30)) || (tiempo[DIAS] > 31))
+                {
+                    tiempo[DIAS] = 0;
+                    tiempo[MESES]++;
+
+                    if (tiempo[MESES] > DICIEMBRE)
+                    {
+                        tiempo[ANIOS]++;
+                    }
+                }
+            }
+        }
+    }
 }
 
 void definir_hora(int movimiento)
