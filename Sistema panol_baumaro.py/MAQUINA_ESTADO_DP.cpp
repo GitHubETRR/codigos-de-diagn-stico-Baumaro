@@ -78,6 +78,8 @@ void parpadear_texto(char texto[], int tiempo, int tiempo_parpadeo);
 
 int tiempo(int tiempo[]);
 
+bool definir_tiempo();
+
 void setup()
 {
 
@@ -111,7 +113,7 @@ void loop()
 
             int movimiento = Actualizar_MaquinaEstado(i_encoder);
 
-            int tiempo_seteado = definir_hora(movimiento);
+            int tiempo_seteado = definir_hora(movimiento, DisplayCursor);
         }
     }
 }
@@ -150,8 +152,9 @@ int[] tiempo(int tiempo[])
     }
 }
 
-void definir_hora(int movimiento)
+bool definir_hora(int movimiento, int DisplayCursor[])
 {
+    int casilla = SEGUNDOS;
 
     lcd.setCursor(DisplayCursor[0], DisplayCursor[1]);
     lcd.print("FECHA: %d:%d:%d", tiempo[ANIOS], tiempo[MESES], tiempo[DIAS]);
@@ -166,8 +169,6 @@ void definir_hora(int movimiento)
     if (1 == digital(ENCODER_1))
     {
 
-        DisplayCursor[0]--;
-
         if ((DisplayCursor[0] == -1) && (DisplayCursor[1] == 1))
         {
             DisplayCursor[0] = 15;
@@ -181,7 +182,31 @@ void definir_hora(int movimiento)
 
         lcd.setCursor(DisplayCursor[0], DisplayCursor[1]);
     }
+
     return false
+}
+
+int maquina_estados_tiempo(int tiempo[], int casilla)
+{
+
+    tiempo[casilla]++;
+
+    switch (casilla)
+    {
+    case SEGUNDOS:
+
+        break;
+    case MINUTOS
+
+        break;
+
+        case HORAS
+
+        break;
+
+        default:
+        break;
+    }
 }
 
 int Actualizar_MaquinaEstado(int &i_encoder)
