@@ -21,12 +21,6 @@ class charakter(ABC):
     @abstractmethod
     def schlanganfall(self):
         pass
-    
-
-    
-    
-
-    
 
 
 
