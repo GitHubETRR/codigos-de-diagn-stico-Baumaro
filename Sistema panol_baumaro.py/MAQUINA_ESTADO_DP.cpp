@@ -20,6 +20,7 @@ enum encoder
 
 #define DISPLAY_RS 12
 #define DISPLAY_ENABLE 11
+int DISPLAY_RW = 0;
 
 enum meses
 {
@@ -39,10 +40,14 @@ enum meses
 
 enum display
 {
-    DISPLAY_D7 = 2,
-    DISPLAY_D6,
+    DISPLAY_D0 = 2,
+    DISPLAY_D1,
+    DISPLAY_D2,
+    DISPLAY_D3,
+    DISPLAY_D4,
     DISPLAY_D5,
-    DISPLAY_D4
+    DISPLAY_D6,
+    DISPLAY_D7
 };
 
 enum tiempo
@@ -70,9 +75,9 @@ enum estados
 
 // crea el objeto lcd de tipo LiquidCrystal para representar el display 16*2
 
-LiquidCrystal lcd(DISPLAY_RS, DISPLAY_ENABLE, DISPLAY_D4, DISPLAY_D5, DISPLAY_D6, DISPLAY_D7);
+LiquidCrystal lcd(DISPLAY_RS, DISPLAY_RW, DISPLAY_ENABLE, DISPLAY_D0, DISPLAY_D1, DISPLAY_D2, DISPLAY_D3, DISPLAY_D4, DISPLAY_D5, DISPLAY_D6, DISPLAY_D7);
 
-void Actualizar_MaquinaEstado(int *);
+void Actualizar_MaquinaEstado_MOVIMIENTO(int *);
 
 void parpadear_texto(char texto[], int tiempo, int tiempo_parpadeo);
 
@@ -82,15 +87,19 @@ bool definir_tiempo();
 
 void setup()
 {
-
+    pinmode(DISPLAY_D0, OUTPUT); // activa los pines del 2 al 10 como salidas al lcd
+    pinmode(DISPLAY_D1, OUTPUT);
+    pinmode(DISPLAY_D2, OUTPUT);
+    pinmode(DISPLAY_D3, OUTPUT);
     pinmode(DISPLAY_D4, OUTPUT);
     pinmode(DISPLAY_D5, OUTPUT);
     pinmode(DISPLAY_D6, OUTPUT);
     pinmode(DISPLAY_D7, OUTPUT);
     pinmode(DISPLAY_RS, OUTPUT);
     pinmode(DISPLAY_ENABLE, OUTPUT);
+    pinmode(DISPLAY_RW, OUTPUT);
 
-    pinmode(ENCODER_1, INPUT);
+    pinmode(ENCODER_1, INPUT); // configura los pines de entrada del encoder
     pinmode(ENCODER_2, INPUT);
     pinmode(ENCODER_OK, INPUT);
 
@@ -99,21 +108,26 @@ void setup()
 
 void loop()
 {
-    static int tiempo[6] = {0, 0, 0, 0, 0, 0};
-    static int DisplayCursor[2] = {0, 0};
+    static int tiempo[6] = {0, 0, 0, 0, 0, 0}; // vector de tiempo
+    static int DisplayCursor[2] = {0, 0};      // filas y columnas del display
     static int cant_loops = 0;
 
-    lcd.setCursor(DisplayCursor[0], DisplayCursor[1]);
+    bool tiempo_seteado = false;
 
     if (cant_loops == 0)
     {
-        while (tiempo_seteado)
+
+        DisplayCursor[1] = 0; // setear  el cursor del lcd en 0 0
+        lcd.setcursor(DisplayCursor[0], DisplayCursor[1])
+
+            while (!tiempo_seteado)
         {
-            int *i_encoder = digitalread(ENCODER_1) || (digitalread(ENCODER_2) << 1);
 
-            int movimiento = Actualizar_MaquinaEstado(i_encoder);
+            int *i_encoder = &(digitalread(ENCODER_1) || (digitalread(ENCODER_2) << 1)); // lee los datos del encoder
 
-            int tiempo_seteado = definir_hora(movimiento, DisplayCursor);
+            int movimiento = Actualizar_MaquinaEstado_MOVIMIENTO(i_encoder); // actualiza el encoder
+
+            tiempo_seteado = definir_hora(movimiento, DisplayCursor);
         }
     }
 }
@@ -154,62 +168,60 @@ int[] tiempo(int tiempo[])
 
 bool definir_hora(int movimiento, int DisplayCursor[])
 {
-    int casilla = SEGUNDOS;
 
+    static int casilla;
+    if (!((casilla == ANIOS) || (casilla == MESES) || (casilla == DIAS) || (casilla == HORAS) || (casilla == MINUTOS) || (casilla == SEGUNDOS)))
+    {
+        casilla = ANIOS;
+    }
+
+    DisplayCursor[1] = 0;
     lcd.setCursor(DisplayCursor[0], DisplayCursor[1]);
-    lcd.print("FECHA: %d:%d:%d", tiempo[ANIOS], tiempo[MESES], tiempo[DIAS]);
+    lcd.print("FECHA: %d:%d:%d", tiempo[ANIOS], tiempo[MESES], tiempo[DIAS]); // imprime la fecha actual
 
     DisplayCursor[1] = 1;
     lcd.setCursor(DisplayCursor[0], DisplayCursor[1]);
-    lcd.print("HORA: %d:%d:%d", tiempo[HORAS], tiempo[MINUTOS], tiempo[SEGUNDOS]);
+    lcd.print("HORA: %d:%d:%d", tiempo[HORAS], tiempo[MINUTOS], tiempo[SEGUNDOS]); // imprime el tiempo actual
 
-    DisplayCursor[0] = 15;
-    lcd.setCursor(DisplayCursor[0], DisplayCursor[1]);
-
-    if (1 == digital(ENCODER_1))
+    if (1 == movimiento)
     {
+        tiempo[casilla]++;
+    }
 
-        if ((DisplayCursor[0] == -1) && (DisplayCursor[1] == 1))
-        {
-            DisplayCursor[0] = 15;
-            DisplayCursor[1] = 0;
-        }
-        else if ((DisplayCursor[0] == -1) && (DisplayCursor[1] == 0))
-        {
-            DisplayCursor[0]++;
-            return true;
-        }
-
-        lcd.setCursor(DisplayCursor[0], DisplayCursor[1]);
+    if (digitalread(ENCODER_OK) == 1)
+    {
+        casilla++;
     }
 
     return false
 }
 
-int maquina_estados_tiempo(int tiempo[], int casilla)
+int Maquina_estado_encoderOK(int casilla)
 {
-
-    tiempo[casilla]++;
 
     switch (casilla)
     {
-    case SEGUNDOS:
-
-        break;
-    case MINUTOS
-
-        break;
-
-        case HORAS
+    case ANIOS:
+        if (digitalread(ENCODER_OK) == 1)
+        {
+            casilla = MESES;
+        }
 
         break;
 
-        default:
+    case MESES:
+        if (digitalread(ENCODER_OK) == 1)
+        {
+            casilla = DIAS;
+        }
+
+        break;
+    default:
         break;
     }
 }
 
-int Actualizar_MaquinaEstado(int &i_encoder)
+int Actualizar_MaquinaEstado_MOVIMIENTO(int &i_encoder)
 {
 
     int movimiento;
@@ -221,7 +233,6 @@ int Actualizar_MaquinaEstado(int &i_encoder)
 
     if (Actualizacion_encoder == 1)
     {
-
         movimiento = DERECHA;
     }
     else if (Actualizacion_encoder == 2)
@@ -239,9 +250,9 @@ int Actualizar_MaquinaEstado(int &i_encoder)
     else
     {
 
-        parpadear_texto("ERROR", "VALOR INVALIDO", 3000, 500);
         exit(VALOR_ERROR);
     }
+
     break;
 
 case ESTADO_B:
@@ -268,7 +279,6 @@ case ESTADO_B:
     else
     {
 
-        parpadear_texto("ERROR", "VALOR INVALIDO", 3000, 500);
         exit(VALOR_ERROR);
     }
 
@@ -334,28 +344,4 @@ case ESTADO_D:
     break;
 
     return movimiento;
-}
-
-void parpadear_texto(char texto_1[], char texto_2[], int tiempo, int tiempo_parpadeo)
-{
-    int tiempo_actual = millis();
-
-    while ((tiempo - tiempo_actual) <= 0)
-    {
-        int i++;
-
-        if ((i % 2) == 0)
-        {
-
-            lcd.print(texto_1);
-            lcd.setCursor(0, 1);
-            lcd.print(texto_2);
-        }
-        else
-        {
-
-            lcd.clear();
-        }
-        delay(tiempo_parpadeo)
-    }
 }

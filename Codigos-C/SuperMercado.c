@@ -8,6 +8,8 @@
 #define TRUE 1
 #define FALSE 0
 #define VALOR_ERROR -1
+#define COMPRAR 0
+#define IMPRIMIR 1
 
 typedef struct
 {
@@ -124,7 +126,7 @@ int main()
 
             printf("\ndesea ingresar al sistema de administracion?\n\n");
 
-            char *VE = VE_char();
+            char *VE = VE_char(); // todas las VE son variables de eleccion
 
             scanf("%3s", VE);
 
@@ -151,7 +153,7 @@ int main()
 
                 switch (*VE)
                 {
-                case 0:
+                case COMPRAR:
                     int resultado = comprar();
 
                     if (resultado == VALOR_ERROR)
@@ -159,9 +161,12 @@ int main()
                         printf("\nel nombre del objeto que ingresaste puede no existir\n");
                     }
                     break;
-                case 1:
+
+                case IMPRIMIR:
+
                     imprimir_objetos();
                     break;
+
                 default:
                     break;
                 }
@@ -171,7 +176,7 @@ int main()
 
         printf("\nsi desea seguir operando ingrese un 1\n");
 
-        scanf("%i", *apagar);
+        scanf("%i", apagar);
 
     } while (*apagar == 1);
 
@@ -428,8 +433,6 @@ int comprar()
     }
 
     int *cant_obj = contar_lineas_csv(fp);
-
-    printf("\ncant: %i\n", *cant_obj);
 
     fseek(fp, 0, SEEK_SET);
 
