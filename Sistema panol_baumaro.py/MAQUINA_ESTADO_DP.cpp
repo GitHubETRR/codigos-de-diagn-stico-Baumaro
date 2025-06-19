@@ -52,7 +52,7 @@ enum display
 
 enum tiempo
 {
-    ANIOS = 1,
+    ANIOS = 0,
     MESES,
     DIAS,
     HORAS,
@@ -77,13 +77,11 @@ enum estados
 
 LiquidCrystal lcd(DISPLAY_RS, DISPLAY_RW, DISPLAY_ENABLE, DISPLAY_D0, DISPLAY_D1, DISPLAY_D2, DISPLAY_D3, DISPLAY_D4, DISPLAY_D5, DISPLAY_D6, DISPLAY_D7);
 
+// prototipos
 void Actualizar_MaquinaEstado_MOVIMIENTO(int *);
-
-void parpadear_texto(char texto[], int tiempo, int tiempo_parpadeo);
-
-int tiempo(int tiempo[]);
-
-bool definir_tiempo();
+int tiempo_(int tiempo[]);
+bool definir_hora(int movimiento, int DisplayCursor[], int tiempo[]);
+void imprimir_LCD(int DisplayCursor[], int tiempo[]);
 
 void setup()
 {
@@ -114,25 +112,29 @@ void loop()
 
     bool tiempo_seteado = false;
 
-    if (cant_loops == 0)
+
+    DisplayCursor[1] = 0; // setear  el cursor del lcd en 0 0
+    lcd.setcursor(DisplayCursor[0], DisplayCursor[1]);
+
+    while (!tiempo_seteado)
     {
 
-        DisplayCursor[1] = 0; // setear  el cursor del lcd en 0 0
-        lcd.setcursor(DisplayCursor[0], DisplayCursor[1])
+        int *i_encoder = &(digitalread(ENCODER_1) || (digitalread(ENCODER_2) << 1)); // lee los datos del encoder
+        int movimiento = Actualizar_MaquinaEstado_MOVIMIENTO(i_encoder); // actualiza el encoder
 
-            while (!tiempo_seteado)
-        {
-
-            int *i_encoder = &(digitalread(ENCODER_1) || (digitalread(ENCODER_2) << 1)); // lee los datos del encoder
-
-            int movimiento = Actualizar_MaquinaEstado_MOVIMIENTO(i_encoder); // actualiza el encoder
-
-            tiempo_seteado = definir_hora(movimiento, DisplayCursor);
-        }
+        tiempo_seteado = definir_hora(movimiento, DisplayCursor);
     }
+
+    while (tiempo_seteado)
+    {
+        tiempo_(tiempo);
+        imprimir_LCD(DisplayCursor, tiempo);
+    }
+    
 }
 
-int[] tiempo(int tiempo[])
+
+int tiempo_(int tiempo[])
 {
     tiempo[SEGUNDOS]++;
     if (tiempo[SEGUNDOS] > 60)
@@ -166,125 +168,207 @@ int[] tiempo(int tiempo[])
     }
 }
 
-bool definir_hora(int movimiento, int DisplayCursor[])
+bool definir_hora(int movimiento, int DisplayCursor[], int tiempo[])
 {
 
+    // comprueba si casilla esta sin definir, en el caso de estar sin definir lo define
     static int casilla;
     if (!((casilla == ANIOS) || (casilla == MESES) || (casilla == DIAS) || (casilla == HORAS) || (casilla == MINUTOS) || (casilla == SEGUNDOS)))
     {
         casilla = ANIOS;
     }
 
-    DisplayCursor[1] = 0;
-    lcd.setCursor(DisplayCursor[0], DisplayCursor[1]);
-    lcd.print("FECHA: %d:%d:%d", tiempo[ANIOS], tiempo[MESES], tiempo[DIAS]); // imprime la fecha actual
+    imprimir_LCD(DisplayCursor, tiempo);
 
-    DisplayCursor[1] = 1;
-    lcd.setCursor(DisplayCursor[0], DisplayCursor[1]);
-    lcd.print("HORA: %d:%d:%d", tiempo[HORAS], tiempo[MINUTOS], tiempo[SEGUNDOS]); // imprime el tiempo actual
-
-    if (1 == movimiento)
+    if (DERECHA == movimiento)
     {
         tiempo[casilla]++;
+        // compruena que si la casilla actual se pasa del limite permitido 
+        switch (casilla)
+        {
+        case ANIOS:
+            if (tiempo[casilla] > 12)
+            {
+                tiempo[casilla] = 0;
+            }
+            
+            break;
+        case MESES:
+            if (tiempo[casilla] > 12)
+            {
+                tiempo[casilla] = 0;
+            }
+            break;
+        
+        case DIAS:
+            if (((tiempo[MESES] == FEBRERO) && (tiempo[casilla] > 28)) || (((tiempo[MESES] == JUNIO) || (tiempo[MESES] == SEPTIEMBRE) || (tiempo[MESES] == ABRIL) || (tiempo[MESES] == NOVIEMBRE)) && (tiempo[casilla] > 30)) || (tiempo[casilla] > 31)){
+                    tiempo[casilla] = 0;
+            }
+            break;
+        
+        case HORAS:
+
+            if (tiempo[casilla] > 12)
+            {
+                tiempo[casilla] = 0;
+            }
+            break;
+
+        case MINUTOS:
+            if (tiempo[casilla] > 60)
+            {
+                tiempo[casilla] = 0;
+            }
+            break;
+
+        case SEGUNDOS:
+            if (tiempo[casilla] > 60)
+            {
+                tiempo[casilla] = 0;
+            }
+            break;
+        }
+
+    }else if (IZQUIERDA == movimiento){
+        tiempo[casilla]--;
+
+        switch (casilla)
+        {
+        case ANIOS:
+            if (tiempo[casilla] < 0)
+            {
+                tiempo[casilla] = 12;
+            }
+            
+            break;
+        case MESES:
+            if (tiempo[casilla] < 0)
+            {
+                tiempo[casilla] = 12;
+            }
+            break;
+        
+        case DIAS:
+            if (tiempo[casilla] < 0 ){
+                if (tiempo[MESES] == FEBRERO)
+                {
+                    tiempo[casilla] = 28;
+                }else if (tiempo[MESES] == ABRIL)
+                {
+                    tiempo[casilla] = 30;
+                }else if (tiempo[MESES] == JUNIO){
+                    tiempo[casilla] = 30;
+                }else if (tiempo[MESES] == SEPTIEMBRE){
+                    tiempo[casilla] = 30;
+                }else if (tiempo[MESES] == NOVIEMBRE){
+                    tiempo[casilla] = 30;
+                }else{
+                    tiempo[casilla] = 31;
+                }
+            }
+                
+            break;
+        
+        case HORAS:
+
+            if (tiempo[casilla] < 0)
+            {
+                tiempo[casilla] = 12;
+            }
+            break;
+
+        case MINUTOS:
+            if (tiempo[casilla] < 0)
+            {
+                tiempo[casilla] = 60;
+            }
+            break;
+
+        case SEGUNDOS:
+            if (tiempo[casilla] < 0)
+            {
+                tiempo[casilla] = 60;
+            }
+            break;
+        }
     }
+    
 
     if (digitalread(ENCODER_OK) == 1)
     {
         casilla++;
     }
 
+    if (casilla > 6)
+    {
+        return true
+    }
+
     return false
 }
 
-int Maquina_estado_encoderOK(int casilla)
+
+int Actualizar_MaquinaEstado_movimiento(int &i_encoder)
+
 {
-
-    switch (casilla)
-    {
-    case ANIOS:
-        if (digitalread(ENCODER_OK) == 1)
-        {
-            casilla = MESES;
-        }
-
-        break;
-
-    case MESES:
-        if (digitalread(ENCODER_OK) == 1)
-        {
-            casilla = DIAS;
-        }
-
-        break;
-    default:
-        break;
-    }
-}
-
-int Actualizar_MaquinaEstado_MOVIMIENTO(int &i_encoder)
-{
-
     int movimiento;
 
     switch (*i_encoder)
+
     case ESTADO_A:
 
         int Actualizacion_encoder = digitalread(ENCODER_1) || (digitalread(ENCODER_2) << 1);
 
-    if (Actualizacion_encoder == 1)
-    {
-        movimiento = DERECHA;
-    }
-    else if (Actualizacion_encoder == 2)
-    {
+        if (Actualizacion_encoder == 1)
+        {
+            movimiento = DERECHA;
+        }
+        else if (Actualizacion_encoder == 2)
+        {
 
-        *i_encoder = Actualizacion_encoder;
-        movimiento = IZQUIERDA;
-    }
-    else if (Actualizacion_encoder == 0)
-    {
+            *i_encoder = Actualizacion_encoder;
+            movimiento = IZQUIERDA;
+        }
+        else if (Actualizacion_encoder == 0){
+            *i_encoder = Actualizacion_encoder;
+            movimiento = QUIETO;
+        }
+        else{
+            exit(VALOR_ERROR);
+        }
 
-        *i_encoder = Actualizacion_encoder;
-        movimiento = QUIETO;
-    }
-    else
-    {
+        break;
 
-        exit(VALOR_ERROR);
-    }
+    case ESTADO_B:
 
-    break;
+        int Actualizacion_encoder = digitalread(ENCODER_1) || (digitalread(ENCODER_2) << 1);
 
-case ESTADO_B:
+        if (Actualizacion_encoder == 3)
+        {
 
-    int Actualizacion_encoder = digitalread(ENCODER_1) || (digitalread(ENCODER_2) << 1);
+            movimiento = DERECHA;
+        }
+        else if (Actualizacion_encoder == 0)
+        {
 
-    if (Actualizacion_encoder == 3)
-    {
+            *i_encoder = Actualizacion_encoder;
+            movimiento = IZQUIERDA;
+        }
+        else if (Actualizacion_encoder == 1)
+        {
 
-        movimiento = DERECHA;
-    }
-    else if (Actualizacion_encoder == 0)
-    {
+            *i_encoder = Actualizacion_encoder;
+            movimiento = QUIETO;
+        }
+        else
+        {
 
-        *i_encoder = Actualizacion_encoder;
-        movimiento = IZQUIERDA;
-    }
-    else if (Actualizacion_encoder == 1)
-    {
+            exit(VALOR_ERROR);
+        }
 
-        *i_encoder = Actualizacion_encoder;
-        movimiento = QUIETO;
-    }
-    else
-    {
+        break;
 
-        exit(VALOR_ERROR);
-    }
-
-    break;
-
-case ESTADO_C:
+    case ESTADO_C:
 
     int Actualizacion_encoder = digitalread(ENCODER_1) || (digitalread(ENCODER_2) << 1);
 
@@ -344,4 +428,16 @@ case ESTADO_D:
     break;
 
     return movimiento;
+}
+
+
+void imprimir_LCD(int DisplayCursor[], int tiempo[]){
+        // setea el cursor en la posicion 0-0 e imprime 
+    DisplayCursor[1] = 0;
+    lcd.setCursor(DisplayCursor[0], DisplayCursor[1]);
+    lcd.print("FECHA: %d:%d:%d", tiempo[ANIOS], tiempo[MESES], tiempo[DIAS]); // imprime la fecha actual
+
+    DisplayCursor[1] = 1;
+    lcd.setCursor(DisplayCursor[0], DisplayCursor[1]);
+    lcd.print("HORA: %d:%d:%d", tiempo[HORAS], tiempo[MINUTOS], tiempo[SEGUNDOS]); // imprime el tiempo actual
 }
