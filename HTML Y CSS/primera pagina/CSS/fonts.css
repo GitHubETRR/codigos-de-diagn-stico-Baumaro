@@ -1,0 +1,16 @@
+@font-face {
+    font-family: Montserrat;
+    src: url("fonts/Montserrat/static/Montserrat-Regular.ttf") format("truetype");
+    font-weight: 400;
+}
+
+@font-face {
+    font-family: Montserrat;
+    src: url("fonts/Montserrat/static/Montserrat-ExtraBold.ttf") format("truetype");
+    font-weight: 900;
+}
+
+@font-face {
+    font-family: Matangi;
+    src: url("fonts/Matangi/static/Matangi-Black.ttf") format("truetype");
+}
