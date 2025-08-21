@@ -47,7 +47,7 @@ class Usuario{
             return Usuario;
         }
         void getContrasenia(){
-            return Contrasena; 
+            return Contrasenia; 
         }
         void setNombre(string nombre){
             Nombre = nombre;
@@ -58,16 +58,22 @@ class Usuario{
         void setRango(int rango){
             Rango = rango;
         }
-        
 };
 
 bool Login(){
     cin >> new(NombreUsuario);
     cin >> new(Contrasena); 
-    ifstream archivoUsuarios("archivoUsuarios.csv");
-    while ()
+    ifstream archivoUsuarios("archivoUsuarios.csv"); //crea un objeto de tipo ifstream 
+    if (!archivo) {
+        cout << "No se pudo abrir el archivo" << endl;
+        return false;
+    }
+
+    string* linea = new string
+
+    while(getline("archivoUsuarios.csv", linea, ','))
     {
-        /* code */
+        cout <<
     }
     
     
