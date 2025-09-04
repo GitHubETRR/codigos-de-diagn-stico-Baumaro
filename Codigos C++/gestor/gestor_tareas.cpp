@@ -9,31 +9,61 @@ using namespace std;
 
 class Tarea{
     private: 
+        string Nombre;
         int ID;
         string Descripcion;
         bool Estado;
+        vector<SubTarea> SubTareas;
         
     public:
+
         Tarea(int id, string descripcion, bool estado){
             ID = id; 
             Descripcion = descripcion;
             Estado = estado; 
         }
-        
-        string getDescripcion(){
-            cout << "Descripcion: " << Descripcion << endl;
-        }
 
         void setDescripcion(string descripcion){
             Descripcion = descripcion;
         }
+
         void setEstado(bool estado){
             Estado = estado;
         }
+
         bool getEstado(){
-            cout << "Estado: " << Estado << endl;
+            if(Estado == true){
+                cout << "Terminado" << endl;
+            }else if(Estado == false){
+                cout << "En proceso" << endl;
+            }
+            return Estado;
         }
+
+        string getDescripcion(){
+            cout << "Descripcion: " << Descripcion << endl;
+        }
+
+        vector<SubTarea> getSubtareas(){
+            return SubTareas;
+        }
+
 };
+
+Tarea operator + (Tarea tarea1, subTarea subTarea1){
+    tarea1.SubTareas.push_back(subTarea1);
+    return tarea1;
+}
+
+class SubTarea :: public Tarea {
+    private:
+        Tarea TareaSuperior;
+        vector<SubTarea> SubTareas;
+    public:
+        vector<SubTarea> getSubtareas(){
+            return SubTareas;
+        }
+}
 
 class Usuario{
     private:
@@ -89,15 +119,17 @@ class Usuario{
 
 void  Bienvenida();
 vector<string> Login();
+void ListaTareas(vector<string>);
 
 int main(){
     Bienvenida(); 
+    Login();
+
 }
 
 void  Bienvenida(){
     cout << "bienvenido a la aplicacion de gestion de tareas" << endl;
 }
-
 
 vector<string> Login(){
     string* NombreUsuario = new string();
@@ -122,7 +154,11 @@ vector<string> Login(){
         }
         if (informacionUsuario[2] == *NombreUsuario && informacionUsuario[3] == *Contrasenia)
         {
-            return informacionUsuario;
+            if(informacionUsuario[4] == 1){
+                string Rango = "admin"
+            }
+            usuarioLogeado = Usuario(nombre = informacionUsuario[0], apellido = informacionUsuario[1], NombreUsuario = informacionUsuario[2], contrasena = informacionUsuario[3], rango = Rango);
+            return usuarioLogeado;
         }
     }
 
@@ -133,6 +169,15 @@ vector<string> Login(){
     delete Contrasenia;
     delete linea;
     delete dato;
+}
+o
+void ListaTareas(vector<string> usuarioLogeado){
+
+
+
+
+
+
 }
 
 
