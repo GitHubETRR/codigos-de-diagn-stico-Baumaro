@@ -1,0 +1,1 @@
+archivos = [f for f in os.listdir(CARPETA_CLASES) if f.lower().endswith(".csv")]

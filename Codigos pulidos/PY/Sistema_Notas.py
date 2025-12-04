@@ -1,136 +1,145 @@
-# -*- coding: utf-8 -*-
-"""
-Gestor de notas por clase (CSV) con gráficos.
-- Crea CSV por clase con las materias que elija el profesor.
-- Carga/actualiza notas de alumnos y guarda en CSV (pandas).
-- Visualiza:
-    * Boxplot de los promedios generales por alumno.
-    * Barras del promedio general por alumno (incluye línea del promedio de la clase).
-Requisitos: pandas, matplotlib, seaborn
-"""
 
-import os
-import sys
-import re
+import os  # módulo para operaciones del sistema (rutas, archivos)
+import sys  # módulo para interactuar con el intérprete y salir del programa
+import re  # módulo para expresiones regulares (validación de nombres)
 
-import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
+import pandas as pd  # pandas para manejo de dataframes y CSV
+import seaborn as sns  # seaborn para gráficos estadísticos
+import matplotlib.pyplot as plt  # matplotlib para dibujar las figuras
 
-CARPETA_CLASES = "clases"
-ENCODING_CSV = "utf-8" 
-MIN_NOTA = 0.0
-MAX_NOTA = 10.0
+CARPETA_CLASES = "clases"  # carpeta donde se guardan los CSV de las clases
+ENCODING_CSV = "utf-8"  # encoding usado al leer/escribir CSV
+MIN_NOTA = 0.0  # nota mínima válida
+MAX_NOTA = 10.0  # nota máxima válida
 
 
-sns.set(style="whitegrid", palette="deep", font_scale=1.1)
+sns.set(style="whitegrid", palette="deep", font_scale=1.1)  # configura estilo de seaborn
 
 
 def asegurar_carpeta_clases():
-    if not os.path.exists(CARPETA_CLASES): #revisa si la ruta existe
-        os.makedirs(CARPETA_CLASES) #si no existe la ruta la crea
+    # Crea la carpeta `CARPETA_CLASES` si no existe
+    if not os.path.exists(CARPETA_CLASES):
+        os.makedirs(CARPETA_CLASES)
 
 
 def listar_csv_clases():
+    # Asegura que la carpeta exista y devuelve una lista ordenada de archivos .csv
     asegurar_carpeta_clases()
-    archivos = [f for f in os.listdir(CARPETA_CLASES) if f.lower().endswith(".csv")]
+    archivos = []
+    for f in os.listdir(CARPETA_CLASES):    
+        if f.lower().endswith(".csv"):
+            archivos.append(f)
     archivos.sort()
     return archivos
 
 
 def ruta_clase(nombre_archivo):
-    return os.path.join(CARPETA_CLASES, nombre_archivo)#retorna la ruta completa y pone las separaciones dependiendo del sistema operativo
+    # Construye la ruta completa al archivo dentro de la carpeta de clases
+    return os.path.join(CARPETA_CLASES, nombre_archivo)
 
 
 def crear_csv_clase():
-    print("\n🟢🟢🟢Crear nueva clase (CSV)🟢🟢🟢")
-    while(nombre == None):
+    # Interfaz para crear un nuevo CSV de clase pidiendo nombre y materias
+    print("\nCrear nueva clase (CSV)")
+    nombre = None
+    # Pide el nombre hasta que sea válido (solo letras, números y guión bajo)
+    while nombre is None:
         nombre = input("Nombre de la clase: ").strip()
-        if  re.search(r'[^A-Za-z0-9_]', nombre):
-            print("⚠️⚠️⚠️Nombre de clase inválido⚠️⚠️⚠️.")
+        if re.search(r'[^A-Za-z0-9_]', nombre) or nombre == "":
+            print("Nombre de clase inválido.")
             print("Use solo letras, números y guiones bajos (_).")
             print("ingrese otro nombre.")
             nombre = None
 
-    nombre_archivo = nombre + ".csv"
-    archivo = ruta_clase(nombre_archivo)
+    nombre_archivo = nombre + ".csv"  # agrega extensión al nombre
+    archivo = ruta_clase(nombre_archivo)  # ruta completa
 
+    # Si ya existe, avisa y no sobreescribe
     if os.path.exists(archivo):
-        print(f"⚠️⚠️⚠️Ya existe un CSV para esa clase: {archivo}⚠️⚠️⚠️")
+        print(f"Ya existe un CSV para esa clase: {archivo}")
         return None
 
-    while(cant == None):
-        cant = int(input("¿Cuántas materias tiene la clase?: ").strip())
-        if cant <= 0:
-            print("⚠️⚠️⚠️La cantidad debe ser mayor a 0.⚠️⚠️⚠️")
-            print("ingrese otra cantidad.")
+    # Pide la cantidad de materias y valida que sea entero > 0
+    cant = None
+    while cant is None:
+        try:
+            cant = int(input("¿Cuántas materias tiene la clase?: ").strip())
+            if cant <= 0:
+                print("La cantidad debe ser mayor a 0.")
+                print("ingrese otra cantidad.")
+                cant = None
+        except ValueError:
+            print("Ingrese un número entero válido.")
             cant = None
 
     materias = []
+    # Pide el nombre de cada materia y valida
     for i in range(cant):
-        while(nombre_materia == None):
+        nombre_materia = None
+        while nombre_materia is None:
             nombre_materia = input(f"Nombre de la materia #{i+1}: ").strip()
-            if re.search(r'[^A-Za-z0-9_]', nombre_materia):
-                print("⚠️⚠️⚠️Nombre de materia inválido.⚠️⚠️⚠️")
+            if re.search(r'[^A-Za-z0-9_]', nombre_materia) or nombre_materia == "":
+                print("Nombre de materia inválido.")
                 nombre_materia = None
         materias.append(nombre_materia)
 
-    columnas = ["Alumno ID", "Alumno"] + materias
-    df = pd.DataFrame(columns=columnas)
-    df.to_csv(archivo, index=False, encoding=ENCODING_CSV)
-    print(f"✅✅✅ Clase creada: {archivo}✅✅✅")
+    columnas = ["Alumno ID", "Alumno"] + materias  # columnas iniciales del CSV
+    df = pd.DataFrame(columns=columnas)  # dataframe vacío con las columnas
+    df.to_csv(archivo, index=False, encoding=ENCODING_CSV)  # guarda CSV
+    print(f" Clase creada: {archivo}")
 
 
+# Separador visual grande (sin efecto en el código)
+# ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 def cargar_df_clase(archivo):
-    ruta_clase(archivo)
+    # Carga un CSV de clase dado su nombre (archivo) dentro de la carpeta de clases
+    ruta = ruta_clase(archivo)  # obtiene la ruta completa
     try:
-        df = pd.read_csv(archivo, encoding=ENCODING_CSV)
+        df = pd.read_csv(ruta, encoding=ENCODING_CSV)  # lee el CSV con pandas
     except FileNotFoundError:
-        print(f"⚠️⚠️⚠️No se encontro el archivo: {archivo}⚠️⚠️⚠️")
+        print(f"No se encontro el archivo: {ruta}")
         return None
 
+    # Valida que existan las columnas obligatorias
     if "Alumno" not in df.columns:
-        raise ValueError("El CSV no tiene columna Alumno.") #lanza una excepción al detectar que falta la columna alumno
+        raise ValueError("El CSV no tiene columna Alumno.")
     if "Alumno ID" not in df.columns:
-        raise ValueError("El CSV no tiene columna Alumno ID.") # lanza una exepción al detectar que falta la columna alumno ID
+        raise ValueError("El CSV no tiene columna Alumno ID.")
 
     return df
 
 
 def guardar_df_clase(df, archivo):
+    # Guarda el dataframe `df` como CSV en la ruta de la clase
     ruta = ruta_clase(archivo)
     df.to_csv(ruta, index=False, encoding=ENCODING_CSV)
 
 
 # ========= Entrada y validación de notas =========
 def pedir_float_o_vacio(prompt, minimo, maximo):
-    """
-    Devuelve:
-        - float dentro del rango [minimo, maximo]
-        - None si el usuario deja en blanco
-    """
+    # Pide un número flotante dentro del rango [minimo, maximo] o acepta cadena vacía
     while True:
-        s = input(prompt).strip().replace(",", ".")
+        s = input(prompt).strip().replace(",", ".")  # permite coma decimal y la normaliza
         if s == "":
-            return None
+            return None  # vacío significa no introducir nota
         try:
-            v = float(s)
-            if v < minimo or v > maximo:
-                print(f"   ⚠️  Debe estar entre {minimo} y {maximo}.")
+            valor = float(s)  # intenta convertir a float
+            if valor < minimo or valor > maximo:
+                print(f"Debe estar entre {minimo} y {maximo}.")
                 continue
-            return v
+            return valor  # valor válido
         except ValueError:
-            print("   ⚠️  Ingrese un número válido o deje en blanco.")
+            print("Ingrese un número válido o deje en blanco.")
 
 
 # ========= Gestión de alumnos y notas =========
 def seleccionar_clase():
+    # Muestra las clases existentes y permite seleccionar una por número
     archivos = listar_csv_clases()
     if not archivos:
-        print("⚠️  No hay clases aún. Cree una con 'Crear nueva clase'.")
+        print(" No hay clases aún. Cree una con 'Crear nueva clase'.")
         return None
     print("\n=== Clases disponibles ===")
     for i, f in enumerate(archivos, start=1):
@@ -141,16 +150,21 @@ def seleccionar_clase():
             return archivos[idx - 1]
     except ValueError:
         pass
-    print("⚠️  Selección inválida.")
+    print("Selección inválida.")
     return None
 
 
 def materias_de_df(df):
-    # Materias = todas las columnas excepto 'Alumno ID' y 'Alumno'
-    return [c for c in df.columns if c not in ("Alumno ID", "Alumno")]
+    # Devuelve la lista de columnas que representan materias en el dataframe
+    materias = []
+    for c in df.columns:
+        if c not in ("Alumno ID", "Alumno"):
+            materias.append(c)
+    return materias
 
 
 def agregar_o_actualizar_notas():
+    # Flujo para agregar un nuevo alumno o actualizar las notas existentes
     print("\n=== Cargar/actualizar notas de una clase ===")
     archivo = seleccionar_clase()
     if not archivo:
@@ -159,7 +173,7 @@ def agregar_o_actualizar_notas():
     df = cargar_df_clase(archivo)
     materias = materias_de_df(df)
     if not materias:
-        print("⚠️  No hay materias en este CSV. Cree la clase de nuevo con materias.")
+        print("No hay materias en este CSV. Cree la clase de nuevo con materias.")
         return
 
     print("\nInstrucciones:")
@@ -169,25 +183,27 @@ def agregar_o_actualizar_notas():
 
     while True:
         print("\n--- Alumno ---")
-        alumno_id = input("Alumno ID (opcional, puede dejar en blanco): ").strip()
-        alumno = input("Nombre y apellido del alumno: ").strip()
-        if not alumno:
-            print("⚠️  El nombre es obligatorio.")
-            continue
+        alumno_id = input("Alumno ID: ").strip()  # id opcional del alumno
+        while True:
+            alumno = input("Nombre y apellido del alumno: ").strip()  # nombre obligatorio
+            if not alumno:
+                print(" El nombre es obligatorio.")
+            else:
+                break
 
-        # Buscar si ya existe por Alumno o Alumno ID
+        # Busca si el alumno ya existe por ID o por nombre (insensible a mayúsculas)
         idx_exist = None
         if alumno_id:
-            coincide = df.index[(df["Alumno ID"].astype(str) == alumno_id)]
-            if len(coincide) > 0:
-                idx_exist = coincide[0]
+            coincidencia = df.index[(df["Alumno ID"].astype(str) == alumno_id)]
+            if len(coincidencia) > 0:
+                idx_exist = coincidencia[0]
         if idx_exist is None:
-            coincide = df.index[(df["Alumno"].astype(str).str.lower() == alumno.lower())]
-            if len(coincide) > 0:
-                idx_exist = coincide[0]
+            coincidencia = df.index[(df["Alumno"].astype(str).str.lower() == alumno.lower())]
+            if len(coincidencia) > 0:
+                idx_exist = coincidencia[0]
 
         if idx_exist is None:
-            # Crear nueva fila
+            # Si no existe, crea una fila nueva con valores vacíos (pd.NA)
             nueva = {c: pd.NA for c in df.columns}
             nueva["Alumno ID"] = alumno_id if alumno_id else pd.NA
             nueva["Alumno"] = alumno
@@ -195,12 +211,13 @@ def agregar_o_actualizar_notas():
                 nueva[m] = pd.NA
             df = pd.concat([df, pd.DataFrame([nueva])], ignore_index=True)
             idx = df.index[-1]
-            print(f"➕ Alumno agregado: {alumno}")
+            print(f"Alumno agregado: {alumno}")
         else:
+            # Si existe, obtenemos el índice para actualizar
             idx = idx_exist
-            print(f"✏️  Actualizando alumno existente: {df.at[idx, 'Alumno']}")
+            print(f"Actualizando alumno existente: {df.loc[idx, 'Alumno']}")
 
-        # Cargar/actualizar materias
+        # Cargar/actualizar materias: pide nota por cada materia
         for m in materias:
             actual = df.at[idx, m]
             muestra = f" (actual: {actual})" if pd.notna(actual) else ""
@@ -208,7 +225,7 @@ def agregar_o_actualizar_notas():
             if val is not None:
                 df.at[idx, m] = val
 
-        # Guardar cambios
+        # Guardar cambios en el CSV
         guardar_df_clase(df, archivo)
         print("💾 Cambios guardados.")
 
@@ -219,6 +236,7 @@ def agregar_o_actualizar_notas():
 
 # ========= Promedios y gráficos =========
 def promedios_por_alumno(df):
+    # Calcula el promedio por alumno ignorando valores NaN
     materias = materias_de_df(df)
     if not materias:
         raise ValueError("No hay materias para calcular promedios.")
@@ -233,22 +251,21 @@ def promedios_por_alumno(df):
     out = df_num[["Alumno ID", "Alumno"]].copy()
     out["Promedio General"] = promedios
     # Filtrar alumnos sin ninguna nota (promedio NaN)
-    out = out[pd.notna(out["Promedio General"])]
+    out = out[pd.notna(out["Promedio General"]) ]
     return out
 
 
 def graficar_boxplot_promedios(df_promedios, nombre_clase):
+    # Dibuja y guarda un boxplot con los promedios generales
     plt.figure(figsize=(8, 5))
-    # Boxplot de los promedios generales (1 dimensión)
-    sns.boxplot(x=df_promedios["Promedio General"], color="#4C72B0")
-    # Agregar puntos individuales
-    sns.stripplot(x=df_promedios["Promedio General"], color="#DD8452", alpha=0.7)
+    sns.boxplot(x=df_promedios["Promedio General"], color="#4C72B0")  # caja
+    sns.stripplot(x=df_promedios["Promedio General"], color="#DD8452", alpha=0.7)  # puntos
 
     plt.title(f"Distribución de promedios generales - {nombre_clase}")
     plt.xlabel("Promedio general (todas las materias)")
     plt.tight_layout()
 
-    # Guardar imagen
+    # Guardar imagen en la carpeta de clases
     asegurar_carpeta_clases()
     salida = os.path.join(CARPETA_CLASES, f"{os.path.splitext(nombre_clase)[0]}_boxplot_promedios.png")
     plt.savefig(salida, dpi=150)
@@ -257,6 +274,7 @@ def graficar_boxplot_promedios(df_promedios, nombre_clase):
 
 
 def graficar_barras_promedios(df_promedios, nombre_clase):
+    # Dibuja barras con el promedio general por alumno y una línea del promedio de la clase
     df_plot = df_promedios.sort_values("Promedio General", ascending=False)
     plt.figure(figsize=(10, 6))
     sns.barplot(data=df_plot, x="Alumno", y="Promedio General")
@@ -276,11 +294,12 @@ def graficar_barras_promedios(df_promedios, nombre_clase):
     asegurar_carpeta_clases()
     salida = os.path.join(CARPETA_CLASES, f"{os.path.splitext(nombre_clase)[0]}_barras_promedios.png")
     plt.savefig(salida, dpi=150)
-    print(f"🖼️  Gráfico guardado en: {salida}")
+    print(f"Gráfico guardado en: {salida}")
     plt.show()
 
 
 def ver_graficos_clase():
+    # Interfaz para seleccionar una clase y mostrar opciones de gráficos
     print("\n=== Ver gráficos de una clase ===")
     archivo = seleccionar_clase()
     if not archivo:
@@ -290,11 +309,11 @@ def ver_graficos_clase():
     try:
         df_prom = promedios_por_alumno(df)
     except ValueError as e:
-        print(f"⚠️  {e}")
+        print(f"  {e}")
         return
 
     if df_prom.empty:
-        print("⚠️  No hay promedios para graficar (cargue algunas notas).")
+        print("  No hay promedios para graficar (cargue algunas notas).")
         return
 
     print("Opciones de gráfico:")
@@ -307,11 +326,12 @@ def ver_graficos_clase():
     elif op == "2":
         graficar_barras_promedios(df_prom, archivo)
     else:
-        print("⚠️  Opción inválida.")
+        print("  Opción inválida.")
 
 
 # ========= Menú principal =========
 def listar_clases():
+    # Muestra los nombres de los archivos CSV disponibles
     archivos = listar_csv_clases()
     if not archivos:
         print("ℹ️  No hay clases aún.")
@@ -322,6 +342,7 @@ def listar_clases():
 
 
 def menu():
+    # Menú interactivo principal del programa
     asegurar_carpeta_clases()
     while True:
         print("\n================= MENÚ =================")
@@ -343,10 +364,11 @@ def menu():
             print("¡Hasta luego!")
             break
         else:
-            print("⚠️  Opción inválida. Intente nuevamente.")
+            print("  Opción inválida. Intente nuevamente.")
 
 
 if __name__ == "__main__":
+    # Ejecuta el menú si se invoca el script directamente
     try:
         menu()
     except KeyboardInterrupt:
